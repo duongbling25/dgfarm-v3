@@ -18,12 +18,6 @@ const STATUS_STYLES: Record<WfStatus, React.CSSProperties> = {
   'Từ chối':    { background: '#FCEBEB', color: '#791F1F', border: '1px solid #f8b4b4' },
 }
 
-const STATUS_ICON: Record<WfStatus, string> = {
-  'Hoàn thành': '✓',
-  'Đã hủy':     '✕',
-  'Từ chối':    '⊘',
-}
-
 function StatusBadge({ status }: { status: WfStatus }) {
   return (
     <span style={{
@@ -103,7 +97,7 @@ function DateDropdown({ refEl, label, from, to, show, setShow, setFrom, setTo, s
 
 const rowGrid: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: '160px 1fr 1fr 100px 150px 120px',
+  gridTemplateColumns: '160px 1fr 1fr 150px 150px 110px',
   padding: '0 16px',
   gap: '0 12px',
   alignItems: 'center',
@@ -114,18 +108,18 @@ const rowGrid: React.CSSProperties = {
 const STATUS_OPTIONS: StatusFilter[] = ['Tất cả', 'Hoàn thành', 'Đã hủy', 'Từ chối']
 
 export default function CustomerInvoiceTable({ initialInvoices }: { initialInvoices: Invoice[] }) {
-  const [search, setSearch]         = useState('')
+  const [search, setSearch]             = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('Tất cả')
-  const [dateFrom, setDateFrom]     = useState('')
-  const [dateTo, setDateTo]         = useState('')
-  const [dateLabel, setDateLabel]   = useState('Toàn thời gian')
+  const [dateFrom, setDateFrom]         = useState('')
+  const [dateTo, setDateTo]             = useState('')
+  const [dateLabel, setDateLabel]       = useState('Toàn thời gian')
   const [showDateDrop, setShowDateDrop] = useState(false)
-  const [minAmt, setMinAmt]         = useState('')
-  const [maxAmt, setMaxAmt]         = useState('')
-  const [page, setPage]             = useState(1)
+  const [minAmt, setMinAmt]             = useState('')
+  const [maxAmt, setMaxAmt]             = useState('')
+  const [page, setPage]                 = useState(1)
   const PER = 15
 
-  const [invoice, setInvoice]             = useState<OrderWithItems | null>(null)
+  const [invoice, setInvoice]               = useState<OrderWithItems | null>(null)
   const [loadingInvoice, setLoadingInvoice] = useState(false)
 
   const dateRef = useRef<HTMLDivElement>(null)
@@ -265,7 +259,7 @@ export default function CustomerInvoiceTable({ initialInvoices }: { initialInvoi
               <div>Mã hóa đơn</div>
               <div>Khách hàng</div>
               <div>Người bán</div>
-              <div style={{ textAlign: 'center' }}>Tổng cộng</div>
+              <div style={{ textAlign: 'right' }}>Tổng cộng</div>
               <div>Trạng thái</div>
               <div>Thời gian</div>
             </div>
@@ -290,9 +284,8 @@ export default function CustomerInvoiceTable({ initialInvoices }: { initialInvoi
                   </span>
                 </div>
 
-                {/* Tên KH — link sang /khach-hang */}
                 <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  <Link href={`/khach-hang`}
+                  <Link href="/khach-hang"
                     title={`Xem hồ sơ ${o.customer_name}`}
                     style={{ color: '#444', textDecoration: 'none', fontWeight: 500 }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#253584'; (e.currentTarget as HTMLElement).style.textDecoration = 'underline' }}
@@ -334,12 +327,33 @@ export default function CustomerInvoiceTable({ initialInvoices }: { initialInvoi
 
             {invoice && !loadingInvoice && (
               <>
-                <div style={{ fontSize: 12, color: '#555', marginBottom: 14, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <span>🕐 {new Date(invoice.ordered_at).toLocaleString('vi-VN')}</span>
-                  <span>👤 Người bán: {invoice.seller}</span>
-                  <StatusBadge status={invoice.workflow_status as WfStatus} />
+                {/* Thông tin chung + khách hàng */}
+                <div style={{ background: '#f8fafc', borderRadius: 8, padding: '12px 16px', marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ fontSize: 12, color: '#555' }}>🕐 {new Date(invoice.ordered_at).toLocaleString('vi-VN')}</span>
+                    <span style={{ fontSize: 12, color: '#555' }}>👤 Người bán: {invoice.seller}</span>
+                    <StatusBadge status={invoice.workflow_status as WfStatus} />
+                  </div>
+                  <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: 8, display: 'flex', flexDirection: 'column', gap: 5, fontSize: 13 }}>
+                    {(invoice as any).customer_name && (
+                      <span>👤 Khách hàng: <strong>{(invoice as any).customer_name}</strong></span>
+                    )}
+                    {(invoice as any).customer_phone && (
+                      <span>📞 Số điện thoại: {(invoice as any).customer_phone}</span>
+                    )}
+                    {(invoice as any).customer_address && (
+                      <span>📍 Địa chỉ: {(invoice as any).customer_address}</span>
+                    )}
+                    {invoice.tracking_code && (
+                      <span>🚚 Mã vận đơn: {invoice.tracking_code}</span>
+                    )}
+                    {invoice.note && (
+                      <span>📝 Ghi chú: {invoice.note}</span>
+                    )}
+                  </div>
                 </div>
 
+                {/* Bảng sản phẩm */}
                 <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 13, border: '1px solid #d0e4f0', borderRadius: 8, overflow: 'hidden' }}>
                   <thead>
                     <tr>
@@ -350,14 +364,14 @@ export default function CustomerInvoiceTable({ initialInvoices }: { initialInvoi
                   </thead>
                   <tbody>
                     {invoice.order_items.map((item, idx) => (
-                      <tr key={idx} style={{ borderTop: '1px solid #eef2f7' }}>
+                      <tr key={idx} style={{ borderTop: '1px solid #eef2f7', background: idx % 2 === 0 ? '#fff' : '#fafafa' }}>
                         <td style={{ padding: '9px 12px', color: '#253584', fontWeight: 600 }}>{item.product_code}</td>
                         <td style={{ padding: '9px 12px' }}>{item.product_name}</td>
                         <td style={{ padding: '9px 12px', textAlign: 'right' }}>{item.quantity}</td>
                         <td style={{ padding: '9px 12px', textAlign: 'right' }}>{fmt(item.unit_price)}</td>
-                        <td style={{ padding: '9px 12px', textAlign: 'right' }}>{item.discount > 0 ? fmt(item.discount) : '-'}</td>
+                        <td style={{ padding: '9px 12px', textAlign: 'right' }}>{item.discount > 0 ? fmt(item.discount) : '—'}</td>
                         <td style={{ padding: '9px 12px', textAlign: 'right' }}>{fmt(item.sell_price)}</td>
-                        <td style={{ padding: '9px 12px', textAlign: 'right' }}>{fmt(item.quantity * item.sell_price)}</td>
+                        <td style={{ padding: '9px 12px', textAlign: 'right', fontWeight: 600 }}>{fmt(item.quantity * item.sell_price)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -383,10 +397,10 @@ function InvoiceSummary({ items }: { items: { quantity: number; sell_price: numb
         <tbody>
           <tr><td style={{ padding: '4px 8px', color: '#333' }}>Tổng số lượng:</td><td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 600 }}>{totalQty}</td></tr>
           <tr><td style={{ padding: '4px 8px', color: '#333' }}>Tổng tiền hàng:</td><td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 600 }}>{fmt(totalAmt + totalDiscount)}</td></tr>
-          <tr><td style={{ padding: '4px 8px', color: '#333' }}>Giảm giá:</td><td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 600 }}>{totalDiscount > 0 ? fmt(totalDiscount) : '-'}</td></tr>
+          <tr><td style={{ padding: '4px 8px', color: '#333' }}>Giảm giá:</td><td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 600 }}>{totalDiscount > 0 ? fmt(totalDiscount) : '—'}</td></tr>
           <tr style={{ borderTop: '1px solid #ddd' }}>
             <td style={{ padding: '8px 8px 4px', fontWeight: 700, fontSize: 14, color: '#0E176E' }}>Khách cần trả:</td>
-            <td style={{ padding: '8px 8px 4px', textAlign: 'right', fontWeight: 700, fontSize: 14, color: '#0E176E' }}>{fmt(totalAmt)}</td>
+            <td style={{ padding: '8px 8px 4px', textAlign: 'right', fontWeight: 700, fontSize: 14, color: '#0E176E' }}>{fmt(totalAmt)} ₫</td>
           </tr>
         </tbody>
       </table>

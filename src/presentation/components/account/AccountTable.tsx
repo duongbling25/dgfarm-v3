@@ -40,7 +40,7 @@ export default function AccountTable({ initialAccounts, employees, callerRole }:
 
   const [fName, setFName] = useState('')
   const [fEmail, setFEmail] = useState('')
-  const [fRole, setFRole] = useState<'admin' | 'staff'>('staff')
+  const [fRole, setFRole] = useState<'admin' | 'manager' | 'staff'>('staff')
   const [fEmployeeId, setFEmployeeId] = useState('')
 
   const filtered = accounts.filter(a => {
@@ -75,7 +75,6 @@ export default function AccountTable({ initialAccounts, employees, callerRole }:
       const today = new Date().toISOString().split('T')[0]
       const newId = 'ACC' + String(accounts.length + 1).padStart(3, '0')
       const emp = employees.find(e => e.id === fEmployeeId)
-      setAccounts(p => [...p, { id: newId, name: fName, email: fEmail, role: fRole, employee_id: fEmployeeId || null, auth_id: null, pin_hash: null, created_at: today, employee_name: emp?.name }])
       setShowAddModal(false)
     })
   }
@@ -171,6 +170,7 @@ export default function AccountTable({ initialAccounts, employees, callerRole }:
           <AccountForm title={`Chỉnh sửa: ${editAcc.id}`} employees={employees}
             name={fName} email={fEmail} role={fRole} employeeId={fEmployeeId}
             setName={setFName} setEmail={setFEmail} setRole={setFRole} setEmployeeId={setFEmployeeId}
+            callerRole={callerRole}
             onSave={doEdit} onCancel={() => setEditAcc(null)} isPending={isPending} />
         </Overlay>
       )}
@@ -178,7 +178,7 @@ export default function AccountTable({ initialAccounts, employees, callerRole }:
   )
 }
 
-function AccountForm({ title, employees, name, email, role, employeeId, setName, setEmail, setRole, setEmployeeId, onSave, onCancel, isPending }: {
+function AccountForm({ title, employees, name, email, role, employeeId, setName, setEmail, setRole, setEmployeeId, onSave, onCancel, isPending, callerRole }: {
   title: string; employees: Employee[]
   name: string; email: string; role: 'admin' | 'manager' | 'staff'; employeeId: string
   setName: (v: string) => void; setEmail: (v: string) => void
@@ -203,8 +203,6 @@ function AccountForm({ title, employees, name, email, role, employeeId, setName,
           <div style={{ fontSize: 11, fontWeight: 600, color: '#555', marginBottom: 3 }}>Role</div>
           <select value={role} onChange={e => setRole(e.target.value as 'admin' | 'manager' | 'staff')} style={{ ...inp, appearance: 'none', cursor: 'pointer' }}>
             <option value="staff">Nhân viên</option>
-            <option value="manager">Quản lý</option>
-            <option value="admin">Admin</option>
             {callerRole == 'admin' && <option value="manager">Quản lý</option>}
             {callerRole == 'admin' && <option value="admin">Admin</option>}
           </select>

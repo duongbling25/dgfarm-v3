@@ -279,7 +279,7 @@ function ModalConfirmHuy({ maPhieu, onClose, onConfirm, saving }: {
 }
 
 // ── Main Page ──────────────────────────────────────────────────
-export default function CashbookPage() {
+export default function CashbookPage({ role }: { role: 'admin' | 'manager' | 'staff' }) {
   const [activeTab, setActiveTab] = useState<CashbookLoaiTaiKhoan | 'tong'>('tien_mat')
   const [modal, setModal] = useState<null | 'thu' | 'chi' | 'tai-khoan' | 'sua-tai-khoan'>(null)
   const [editTK, setEditTK] = useState<TaiKhoanQuy | null>(null)
@@ -553,7 +553,7 @@ export default function CashbookPage() {
                                 <div style={{ display: 'flex', gap: 8 }}>
                                   <button style={{ ...btnStyle, background: '#253584', fontSize: 12 }}>↗ Mở phiếu</button>
                                   <button onClick={() => window.print()} style={{ ...btnStyle, background: '#fff', color: '#374151', border: '1px solid #E5E7EB', fontSize: 12 }}>🖨 In</button>
-                                  {p.trang_thai === 'da_thanh_toan' && (
+                                  {p.trang_thai === 'da_thanh_toan' && role == 'admin' &&(
                                     <button
                                       onClick={e => { e.stopPropagation(); setHuyTarget({ id: p.id, ma: p.ma_phieu }) }}
                                       style={{ ...btnStyle, background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', fontSize: 12 }}>

@@ -3,6 +3,9 @@
 import React, { useState, useTransition, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/infrastructure/supabase/client'
 import { PgBtn } from '@/presentation/components/ui/SharedUI'
+import { getInvoiceWithItemsUseCase } from '@/application/use-cases/order/GetCustomerInvoicesUseCase'
+import type { OrderWithItems } from '@/domain/entities/Customer'
+import OrderDetailModal from '@/presentation/components/order/OrderDetailModal'
 
 const fmt = (n: number) => n.toLocaleString('vi-VN')
 
@@ -165,6 +168,17 @@ export default function OrderTable({ role, accountId }: Props) {
   const PER = 10
   const [isPending, startTransition] = useTransition()
   const [confirmAction, setConfirmAction] = useState<{ order: Order; type: 'cancel' | 'reject' } | null>(null)
+  const [detailOrder, setDetailOrder] = useState<OrderWithItems | null>(null)
+const [loadingDetail, setLoadingDetail] = useState(false)
+
+const openDetail = async (orderId: string) => {
+  setLoadingDetail(true)
+  setDetailOrder(null)
+  const data = await getInvoiceWithItemsUseCase(orderId)
+  setDetailOrder(data)
+  setLoadingDetail(false)
+}
+
 
   const supabase = createClient()
 
@@ -288,8 +302,8 @@ export default function OrderTable({ role, accountId }: Props) {
   // RBAC helpers
   const canConfirm = true
   const canReject  = true
-  const canCancel  = role === 'admin'
-  // manager chỉ xem, không thao tác đơn online
+  const canCancel  = role === 'admin' || role == 'manager'
+  
 
   return (
     <>
@@ -420,7 +434,11 @@ export default function OrderTable({ role, accountId }: Props) {
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f9fbff'}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = '#fff'}>
                   <div><input type="checkbox" style={{ width: 13, height: 13, accentColor: '#253584', cursor: 'pointer' }} /></div>
-                  <div style={{ color: '#253584', fontWeight: 500 }}>{o.id}</div>
+                  <div 
+                    onClick={() => openDetail(o.id)}
+                    style={{ color: '#253584', fontWeight: 500, cursor: 'pointer', textDecoration: 'underline' }}>
+                   {o.id}
+                  </div>
                   <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.customer_name}</div>
                   <div style={{ fontWeight: 500 }}>{fmt(o.total)}</div>
                   <div>{wsBadge(o.workflow_status)}</div>
@@ -453,11 +471,6 @@ export default function OrderTable({ role, accountId }: Props) {
                         Hủy
                       </button>
                     )}
-
-                    {/* Manager chỉ xem — không có nút thao tác */}
-                    {role === 'manager' && (
-                      <span style={{ fontSize: 11, color: '#aaa', fontStyle: 'italic' }}>Chỉ xem</span>
-                    )}
                   </div>
                 </div>
               )
@@ -477,6 +490,12 @@ export default function OrderTable({ role, accountId }: Props) {
           </div>
         </main>
       </div>
+
+      <OrderDetailModal
+       order={detailOrder}
+       loading={loadingDetail}
+       onClose={() => setDetailOrder(null)}
+      />
 
       {/* Confirm modal */}
       {confirmAction && (
